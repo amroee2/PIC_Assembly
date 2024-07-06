@@ -10,5 +10,5 @@
 - [ ] read from ultrasonic module.
 - [ ] view ultrasonic value on Lcd.
 - [ ] connect ultrasonic with decoder & miltiplexer.
- - [ ] calculate max 4 and view on Lcd.
+- [ ] calculate max 4 values and view on Lcd.
  
