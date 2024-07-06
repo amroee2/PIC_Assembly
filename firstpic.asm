@@ -6,7 +6,7 @@ __CONFIG 0x3731
 ; Variables
 Count EQU 0x20     ; Temporary register for counting overflows
 Char EQU 0x25
-
+Blinker EQU 0x30
 ; The instructions should start from here
 ORG 0x00
 GOTO init
@@ -52,16 +52,29 @@ INCLUDE "LCDIS_PORTD.INC" ; IF U WANT TO USE LCD ON PORT D
 start:
     CALL xms
     CALL xms
-
+	
     CALL inid
-
+	CALL blink
 loop:
-    CALL display_text   ; Display the text
-    CALL delay_0_5s        ; Delay for some time
-    CALL clear_lcd      ; Clear the LCD
-    CALL delay_0_5s          ; Delay for some time
+
 
     GOTO loop
+
+
+
+
+
+blink:
+	MOVLW 0x03         ; Number of blinks (3)
+    MOVWF Blinker        ; Load Count with the number of blinks
+	blink_loop:
+		CALL display_text   ; Display the text
+	    CALL delay_0_5s        ; Delay for some time
+	    CALL clear_lcd      ; Clear the LCD
+	    CALL delay_0_5s          ; Delay for some time
+		DECFSZ Blinker, f    ; Decrement the overflow count
+   		GOTO blink_loop    ; Repeat until Count reaches zero
+	RETURN
 
 ; Subroutine to display the text
 display_text:
