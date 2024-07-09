@@ -43,6 +43,12 @@ GOTO ISR
 
 ; Initialization routine
 init:
+    bsf STATUS, RP0   ; Select Bank 1
+    movlw b'00000000' ; Set all PORTC pins as output
+    movwf TRISC
+    bcf STATUS, RP0   ; Select Bank 0
+
+
 	BANKSEL OPTION_REG
     MOVLW b'00000111'  ; Prescaler 1:256 assigned to Timer0
     MOVWF OPTION_REG
@@ -87,12 +93,26 @@ main:
   
 loop:
     ; Trigger pulse generation
+   bsf PORTC, 3
+
+    ; Loop to toggle between different outputs
+    ; Set A, B, C = 000
+    bcf PORTC, 0
+    bcf PORTC, 1
+    bcf PORTC, 2
+
     bcf PORTB, TRIGGER_PIN   ; Clear RB0 (trigger low)
     nop
     nop
-    bsf PORTB, TRIGGER_PIN   ; Set RB0 high (trigger pulse)        
-    call delay_us_10         ; Wait for 10 Âµs
+    bsf PORTB, TRIGGER_PIN   ; Set RB0 high (trigger pulse)  
+    bsf PORTC, 0
+    bsf PORTC, 1
+    bsf PORTC, 2   
+    call delay_us_10         ; Wait for 10 µs
     bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
+    bcf PORTC, 0
+    bcf PORTC, 1
+    bcf PORTC, 2  
     
     ; Wait for echo pulse to start
 wait_echo:
@@ -187,7 +207,7 @@ lowd	MOVF	Lsd,W		; load low digit result
     
     goto loop            ; Repeat loop indefinitely
 
-; Delay function for 10 Âµs delay
+; Delay function for 10 µs delay
 delay_us_10:
     nop
 	nop
@@ -307,6 +327,8 @@ display_text:
     MOVWF Char
     BCF Select, RS
     CALL send
+
+
 
     ; Write "Welcome to"
     MOVLW 'W'
@@ -458,5 +480,19 @@ wait_for_overflow:
 
     RETURN
 
+delay:
+    movlw d'250'
+    movwf 0x21
+d1:
+    movlw d'250'
+    movwf 0x22
+d2:
+    nop
+    nop
+    decfsz 0x22, f
+    goto d2
+    decfsz 0x21, f
+    goto d1
+    return
 
 end
