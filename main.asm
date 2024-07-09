@@ -33,6 +33,7 @@ Blinker EQU 0x38
 prevCarry equ 0x38
 res1 equ 0x39
 res2 equ 0x40
+
 ; Main program
 ORG 0x00
 GOTO init   ; Jump to main program
@@ -69,6 +70,10 @@ init:
     banksel T1CON       ; Select bank for T1CON
     movlw b'00000000'   ; Timer1 on, prescaler 1:4 (Fosc/4)
     movwf T1CON
+
+	BANKSEL PORTD
+    bcf PORTC, 3
+    bcf PORTC, 4
     
     BANKSEL TRISD
     CLRF TRISD
@@ -93,7 +98,6 @@ main:
   
 loop:
     ; Trigger pulse generation
-    bsf PORTC, 3
 
     bcf PORTC, 0
     bcf PORTC, 1
@@ -247,14 +251,59 @@ loop:
     bsf PORTC, 2
 	call wait_echo
 
-
-
+    BTFSS PORTC, 3 ; Test bit PORTC,3, skip if set
+    GOTO CHECK_C4
+    GOTO NEXT_STATE
 
 
 
 	goto loop
 
     ; Wait for echo pulse to start
+CHECK_C4:
+    BTFSS PORTC, 4 ; Test bit PORTC,4, skip if set
+    GOTO STATE_00
+    GOTO NEXT_STATE
+
+STATE_00:
+    ; Set PORTC to 01
+    BSF PORTC, 3
+    GOTO loop
+
+NEXT_STATE:
+    ; Check if PORTC,3 is 1 and PORTC,4 is 0 (01)
+    BTFSC PORTC, 3 ; Test bit PORTC,3, skip if clear
+    GOTO CHECK_C4_01
+    GOTO NEXT_STATE_10
+
+CHECK_C4_01:
+    BTFSS PORTC, 4 ; Test bit PORTC,4, skip if set
+    GOTO STATE_01
+    GOTO loop
+
+STATE_01:
+    ; Set PORTC to 10
+    BCF PORTC, 3
+    BSF PORTC, 4
+    GOTO loop
+
+NEXT_STATE_10:
+    ; Check if PORTC,3 is 0 and PORTC,4 is 1 (10)
+    BTFSS PORTC, 3 ; Test bit PORTC,3, skip if set
+    GOTO CHECK_C4_10
+    GOTO loop
+
+CHECK_C4_10:
+    BTFSC PORTC, 4 ; Test bit PORTC,4, skip if clear
+    GOTO STATE_10
+    GOTO loop
+
+STATE_10:
+    ; Set PORTC to 00
+    BCF PORTC, 3
+    BCF PORTC, 4
+    GOTO loop
+
 wait_echo:
     btfss PORTB, ECHO_PIN    ; Wait for RB1 to go high
     goto wait_echo
