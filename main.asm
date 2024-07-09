@@ -93,10 +93,8 @@ main:
   
 loop:
     ; Trigger pulse generation
-   bsf PORTC, 3
+    bsf PORTC, 3
 
-    ; Loop to toggle between different outputs
-    ; Set A, B, C = 000
     bcf PORTC, 0
     bcf PORTC, 1
     bcf PORTC, 2
@@ -107,13 +105,155 @@ loop:
     bsf PORTB, TRIGGER_PIN   ; Set RB0 high (trigger pulse)  
     bsf PORTC, 0
     bsf PORTC, 1
-    bsf PORTC, 2   
+    bsf PORTC, 2
+   
     call delay_us_10         ; Wait for 10 탎
     bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
     bcf PORTC, 0
     bcf PORTC, 1
-    bcf PORTC, 2  
-    
+    bcf PORTC, 2
+	call wait_echo
+
+    bsf PORTC, 0
+    bcf PORTC, 1
+    bcf PORTC, 2
+
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (trigger low)
+    nop
+    nop
+    bsf PORTB, TRIGGER_PIN   ; Set RB0 high (trigger pulse)  
+    bsf PORTC, 0
+    bsf PORTC, 1
+    bsf PORTC, 2
+   
+    call delay_us_10         ; Wait for 10 탎
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
+    bsf PORTC, 0
+    bcf PORTC, 1
+    bcf PORTC, 2
+	call wait_echo
+
+    bcf PORTC, 0
+    bsf PORTC, 1
+    bcf PORTC, 2
+
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (trigger low)
+    nop
+    nop
+    bsf PORTB, TRIGGER_PIN   ; Set RB0 high (trigger pulse)  
+    bsf PORTC, 0
+    bsf PORTC, 1
+    bsf PORTC, 2
+   
+    call delay_us_10         ; Wait for 10 탎
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
+    bcf PORTC, 0
+    bsf PORTC, 1
+    bcf PORTC, 2
+	call wait_echo
+
+    bsf PORTC, 0
+    bsf PORTC, 1
+    bcf PORTC, 2
+
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (trigger low)
+    nop
+    nop
+    bsf PORTB, TRIGGER_PIN   ; Set RB0 high (trigger pulse)  
+    bsf PORTC, 0
+    bsf PORTC, 1
+    bsf PORTC, 2
+   
+    call delay_us_10         ; Wait for 10 탎
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
+    bsf PORTC, 0
+    bsf PORTC, 1
+    bcf PORTC, 2
+	call wait_echo
+
+    bcf PORTC, 0
+    bcf PORTC, 1
+    bsf PORTC, 2
+
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (trigger low)
+    nop
+    nop
+    bsf PORTB, TRIGGER_PIN   ; Set RB0 high (trigger pulse)  
+    bsf PORTC, 0
+    bsf PORTC, 1
+    bsf PORTC, 2
+   
+    call delay_us_10         ; Wait for 10 탎
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
+    bcf PORTC, 0
+    bcf PORTC, 1
+    bsf PORTC, 2
+	call wait_echo
+
+    bsf PORTC, 0
+    bcf PORTC, 1
+    bsf PORTC, 2
+
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (trigger low)
+    nop
+    nop
+    bsf PORTB, TRIGGER_PIN   ; Set RB0 high (trigger pulse)  
+    bsf PORTC, 0
+    bsf PORTC, 1
+    bsf PORTC, 2
+   
+    call delay_us_10         ; Wait for 10 탎
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
+    bsf PORTC, 0
+    bcf PORTC, 1
+    bsf PORTC, 2
+	call wait_echo
+
+    bcf PORTC, 0
+    bsf PORTC, 1
+    bsf PORTC, 2
+
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (trigger low)
+    nop
+    nop
+    bsf PORTB, TRIGGER_PIN   ; Set RB0 high (trigger pulse)  
+    bsf PORTC, 0
+    bsf PORTC, 1
+    bsf PORTC, 2
+   
+    call delay_us_10         ; Wait for 10 탎
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
+    bcf PORTC, 0
+    bsf PORTC, 1
+    bsf PORTC, 2
+	call wait_echo
+
+    bsf PORTC, 0
+    bsf PORTC, 1
+    bsf PORTC, 2
+
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (trigger low)
+    nop
+    nop
+    bsf PORTB, TRIGGER_PIN   ; Set RB0 high (trigger pulse)  
+    bcf PORTC, 0
+    bcf PORTC, 1
+    bcf PORTC, 2
+   
+    call delay_us_10         ; Wait for 10 탎
+    bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
+    bsf PORTC, 0
+    bsf PORTC, 1
+    bsf PORTC, 2
+	call wait_echo
+
+
+
+
+
+
+	goto loop
+
     ; Wait for echo pulse to start
 wait_echo:
     btfss PORTB, ECHO_PIN    ; Wait for RB1 to go high
@@ -124,6 +264,7 @@ wait_echo:
     clrf TMR1L               ; Clear TMR1 low byte
     clrf TMR1H               ; Clear TMR1 high byte
     bsf T1CON, TMR1ON        ; Turn on Timer1
+
     
 wait_echo_high:
     btfsc PORTB, ECHO_PIN    ; Wait for RB1 to go low
@@ -141,6 +282,7 @@ wait_echo_high:
    movwf  H
    goto divide58
    terminate:
+
 
 
 
@@ -204,8 +346,9 @@ lowd	MOVF	Lsd,W		; load low digit result
     ;movwf distance       ; Store calculated distance in variable
     
     ; Your further processing here, e.g., sending distance over UART or displaying on LCD
-    
-    goto loop            ; Repeat loop indefinitely
+    call delay_0_5s
+	call delay_0_5s
+    RETURN           ; Repeat loop indefinitely
 
 ; Delay function for 10 탎 delay
 delay_us_10:
