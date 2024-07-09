@@ -167,11 +167,14 @@ done10  ADDWF Lsd, F      ; add 10 back to Lsd if last subtraction was negative
 
 ; Display hundreds place
         MOVF  Hsd, W      ; load hundreds digit result
+		BTFSC	STATUS,Z	; check if Z
+	    GOTO	mid
         ADDLW D'48'       ; convert to ASCII ('0' is ASCII 30h or 48 decimal)
         BSF   Select, RS  ; select data mode
         CALL  send        ; send hundreds digit
 
 ; Display tens place
+mid:
         MOVF  Msd, W      ; load tens digit result
         ADDLW D'48'       ; convert to ASCII
         BSF   Select, RS  ; select data mode
