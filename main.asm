@@ -30,12 +30,31 @@ divh EQU 0x36
 Count EQU 0x37 
 Blinker EQU 0x38
 
-prevCarry equ 0x38
-res1 equ 0x39
-res2 equ 0x40
+prevCarry equ 0x39
+res1 equ 0x40
+res2 equ 0x41
+v1   equ 0x42
+v2	 equ 0x43		
+v3   equ 0x44
+v4   equ 0x45
+Hsd   EQU 0x46
+printer equ 0x47
+; max 4 names variables
+name1    equ 0x48
+name2    equ 0x49
+name3    equ 0x50
+name4    equ 0x51
+	; digits of the ultrasonic id
+Msd2               equ 0x52
+Lsd2               equ 0x53 
+
+tempName  equ 0x54
+calculate equ 0x55
 
 ; Main program
 ORG 0x00
+    
+
 GOTO init   ; Jump to main program
 
 
@@ -44,6 +63,8 @@ GOTO ISR
 
 ; Initialization routine
 init:
+    CLRF calculate
+   
     bsf STATUS, RP0   ; Select Bank 1
     movlw b'00000000' ; Set all PORTC pins as output
     movwf TRISC
@@ -78,7 +99,7 @@ init:
     BANKSEL TRISD
     CLRF TRISD
     BANKSEL PORTD
-	CALL blink
+	;CALL blink
     GOTO main
     
 ISR:
@@ -89,7 +110,11 @@ ISR:
 
 INCLUDE "LCDIS_PORTD.INC"
 main:
-
+    CLRF v1
+    CLRF v2
+    CLRF v3
+    CLRF v4
+	CLRF printer
     call inid
 	CALL blink
 
@@ -111,7 +136,7 @@ loop:
     bsf PORTC, 1
     bsf PORTC, 2
    
-    call delay_us_10         ; Wait for 10 µs
+    call delay_us_10         ; Wait for 10 ï¿½s
     bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
     bcf PORTC, 0
     bcf PORTC, 1
@@ -130,7 +155,7 @@ loop:
     bsf PORTC, 1
     bsf PORTC, 2
    
-    call delay_us_10         ; Wait for 10 µs
+    call delay_us_10         ; Wait for 10 ï¿½s
     bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
     bsf PORTC, 0
     bcf PORTC, 1
@@ -149,7 +174,7 @@ loop:
     bsf PORTC, 1
     bsf PORTC, 2
    
-    call delay_us_10         ; Wait for 10 µs
+    call delay_us_10         ; Wait for 10 ï¿½s
     bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
     bcf PORTC, 0
     bsf PORTC, 1
@@ -168,7 +193,7 @@ loop:
     bsf PORTC, 1
     bsf PORTC, 2
    
-    call delay_us_10         ; Wait for 10 µs
+    call delay_us_10         ; Wait for 10 ï¿½s
     bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
     bsf PORTC, 0
     bsf PORTC, 1
@@ -187,7 +212,7 @@ loop:
     bsf PORTC, 1
     bsf PORTC, 2
    
-    call delay_us_10         ; Wait for 10 µs
+    call delay_us_10         ; Wait for 10 ï¿½s
     bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
     bcf PORTC, 0
     bcf PORTC, 1
@@ -205,8 +230,8 @@ loop:
     bsf PORTC, 0
     bsf PORTC, 1
     bsf PORTC, 2
-   
-    call delay_us_10         ; Wait for 10 µs
+
+    call delay_us_10         ; Wait for 10 ï¿½s
     bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
     bsf PORTC, 0
     bcf PORTC, 1
@@ -225,7 +250,7 @@ loop:
     bsf PORTC, 1
     bsf PORTC, 2
    
-    call delay_us_10         ; Wait for 10 µs
+    call delay_us_10         ; Wait for 10 ï¿½s
     bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
     bcf PORTC, 0
     bsf PORTC, 1
@@ -244,7 +269,7 @@ loop:
     bcf PORTC, 1
     bcf PORTC, 2
    
-    call delay_us_10         ; Wait for 10 µs
+    call delay_us_10         ; Wait for 10 ï¿½s
     bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
     bsf PORTC, 0
     bsf PORTC, 1
@@ -331,75 +356,168 @@ wait_echo_high:
    movwf  H
    goto divide58
    terminate:
+   MOVF  Count, W 
+   call  AddValue
+   INCF printer, F  ; Increment the counter
+   MOVF printer, W
+   SUBLW D'24'      ; Compare counter with 24
+   BTFSC STATUS, Z  ; Skip next instruction if counter is  24
+   goto clear
 
 
 
+   MOVF calculate, W
+   SUBLW 0x00
+   BTFSC STATUS, Z
+   call display_text2
+   decf calculate, F
+   
+   
+ 
+ 
+    ; If counter is 24, print the value of v1
+    ;CALL clear       ; Call clear subroutine to reset the counter
+ GOTO nextTurn   ; If counter is not 24, go to NEXT_TURN
 
-; Convert high byte to ASCII and display
-;movf duration_high, W
-;call bin_to_ascii
-;call display_digits
+clear:
 
-        ; Call LCD send routine
+call clear_lcd
+MOVF name1,W
+   MOVWF tempName 
+   MOVF  v1, W
+   call outres
+   MOVF name2,W
+   MOVWF tempName 
+   MOVF  v2, W 
+   call outres
+   call next_line
+   MOVF name3,W
+   MOVWF tempName 
+   MOVF  v3, W 
+   call outres
+   MOVF name4,W
+   MOVWF tempName 
+   MOVF  v4, W 
+   call outres
+   call first_line
 
-; Move to the next position on LCD (depends on your LCD configuration)
+   
+  
 
+	CLRF v1
+    CLRF v2
+    CLRF v3
+    CLRF v4
+    CLRF printer
+GOTO nextTurn   
+ next_line:
+    MOVLW 0xC0 ; LCD command to move to the second line (address 0xC0)
+    BCF Select, RS ; select instruction mode
+    CALL send
+    RETURN 
 
-; Convert low byte to ASCII and display
-;movlw TMR1L
-;sublw 3A
-;sublw 3A
-;sublw 3A
-;call bin_to_ascii
-;call display_digits 
-;bsf PORTD, RS     ; Set RS for data
-;call send 
+first_line
+   movlw 0x80
+   BCF Select, RS ; select instruction mode
+   CALL send
+   RETURN 
 
 ; Convert binary to BCD ...................................
+outres:  ;MOVF  v1, W    ; load Count into W
+        MOVWF Lsd         ; initially store Count in Lsd
+        CLRF  Msd         ; clear tens place
+        CLRF  Hsd         ; clear hundreds place
+
+; Extract hundreds place
+        MOVLW D'100'      ; load 100 into W
+loop100 SUBWF Lsd, F      ; subtract 100 from Lsd
+        BTFSS STATUS, C   ; if result is negative, exit loop
+        GOTO done100      ; if negative, exit loop
+        INCF  Hsd, F      ; increment hundreds place
+        GOTO loop100      ; repeat for more hundreds
+done100 ADDWF Lsd, F      ; add 100 back to Lsd if last subtraction was negative
+
+; Extract tens place
+        MOVLW D'10'       ; load 10 into W
+loop10  SUBWF Lsd, F      ; subtract 10 from Lsd
+        BTFSS STATUS, C   ; if result is negative, exit loop
+        GOTO done10       ; if negative, exit loop
+        INCF  Msd, F      ; increment tens place
+        GOTO loop10       ; repeat for more tens
+done10  ADDWF Lsd, F      ; add 10 back to Lsd if last subtraction was negative
+
+    MOVLW 'U'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW 'S'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+	
+	MOVF tempName, W
+	call outres2
+	
+
+  ;  MOVLW '0'
+   ; MOVWF Char
+    ;BSF Select, RS
+    ;CALL send
+
+    ;MOVLW '5'
+    ;MOVWF Char
+    ;BSF Select, RS
+    ;CALL send
+
+    MOVLW ':'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+     
+ 
+
+; Display hundreds place
+        MOVF  Hsd, W      ; load hundreds digit result
+		BTFSC	STATUS,Z	; check if Z
+	    GOTO	mid
+        ADDLW D'48'       ; convert to ASCII ('0' is ASCII 30h or 48 decimal)
+        BSF   Select, RS  ; select data mode
+        CALL  send        ; send hundreds digit
+
+; Display tens place
+mid:
+        MOVF  Msd, W      ; load tens digit result
+        ADDLW D'48'       ; convert to ASCII
+        BSF   Select, RS  ; select data mode
+        CALL  send        ; send tens digit
+
+; Display units place
+        MOVF  Lsd, W      ; load units digit result
+        ADDLW D'48'       ; convert to ASCII
+        BSF   Select, RS  ; select data mode
+        CALL  send        ; send units digit
+
+  
+ 
+
+return
 
 
-;MOVLW   b'00000101'   ; Load literal 00000101 (binary 5)
-;MOVWF   TMR1L         ; Move WREG to TMR1L to set TMR1L to 5 in binary
-outres	MOVF  Count ,W	; load result
-	MOVWF	Lsd		; into low digit store
-	CLRF	Msd		; high digit = 0
-	BSF	STATUS,C	; set C flag
-	MOVLW	D'10'		; load 10
-
-again	SUBWF	Lsd		; sub 10 from result
-	INCF	Msd		; inc high digit
-	BTFSC	STATUS,C	; check if negative
-	GOTO	again		; no, keep going
-	ADDWF	Lsd		; yes, add 10 back 
-	DECF	Msd		; inc high digit
 
 
-; display 2 digit BCD result ..............................
-
-	MOVF	Msd,W		; load high digit result
-		; yes, dont display Msd
-
-	ADDLW	030		; convert to ASCII
-	BSF	Select,RS	; Select data mode
-	CALL	send		; and send Msd
-
-lowd	MOVF	Lsd,W		; load low digit result
-    ADDLW	030		; convert to ASCII
-	BSF	Select,RS	; Select data mode
-	CALL	send		; and send Msd
-
-			; scan for clear key
-    
-    
-   ; movf temp, W         ; Move the calculated distance
-    ;movwf distance       ; Store calculated distance in variable
-    
-    ; Your further processing here, e.g., sending distance over UART or displaying on LCD
+nextTurn:
+   
     call delay_0_5s
-	call delay_0_5s
+    ;call delay_0_5s
     RETURN           ; Repeat loop indefinitely
 
-; Delay function for 10 µs delay
+
+
+
+
+
+; Delay function for 10 ï¿½s delay
 delay_us_10:
     nop
 	nop
@@ -656,7 +774,7 @@ clear_lcd:
 
 ; Subroutine to generate a 0.5-second delay
 delay_0_5s:
-    MOVLW 0x08         ; Number of overflows (8)
+    MOVLW 0x08         ; Number of overflows (ðŸ˜Ž
     MOVWF Count        ; Load Count with the number of overflows
 
 delay_loop:
@@ -686,5 +804,217 @@ d2:
     decfsz 0x21, f
     goto d1
     return
+
+AddValue:
+    MOVWF temp
+
+    ; Compare with v1
+    MOVF v1, W
+    SUBWF temp, W
+    BTFSS STATUS, C
+    GOTO CheckV2
+    ; Shift values down
+
+    MOVF v3, W
+    MOVWF v4
+    MOVF v2, W
+    MOVWF v3
+    MOVF v1, W
+    MOVWF v2
+    MOVF temp, W
+    MOVWF v1
+	
+;shift names
+
+ 	MOVF name3, W
+    MOVWF name4
+    MOVF name2, W
+    MOVWF name3
+    MOVF name1, W
+    MOVWF name2
+	MOVF printer ,W	; store the number of ultrasonic
+	MOVWF name1
+    INCF name1,F
+ 
+    RETURN
+
+CheckV2:
+    MOVF v2, W
+    SUBWF temp, W
+    BTFSS STATUS, C
+    GOTO CheckV3
+    ; Shift values down
+
+    MOVF v3, W
+    MOVWF v4
+    MOVF v2, W
+    MOVWF v3
+    MOVF temp, W
+    MOVWF v2
+
+;shift names
+	MOVF name3, W
+    MOVWF name4
+    MOVF name2, W
+    MOVWF name3
+   	MOVF printer ,W	; store the number of ultrasonic
+	MOVWF name2
+    INCF name2,F
+
+
+    RETURN
+
+CheckV3:
+    MOVF v3, W
+    SUBWF temp, W
+    BTFSS STATUS, C
+    GOTO CheckV4
+    ; Shift value down
+
+    MOVF v3, W
+    MOVWF v4
+    MOVF temp, W
+    MOVWF v3
+	;shift names
+	MOVF name3, W
+    MOVWF name4
+	MOVF printer ,W  ; store the number of ultrasonic
+	MOVWF name3
+    INCF name3,F
+
+    RETURN
+
+CheckV4:
+    MOVF v4, W
+    SUBWF temp, W
+    BTFSS STATUS, C
+    RETURN
+    ; Store in v4 if larger than current v4
+
+    MOVF temp, W ; store the number of ultrasonic
+    MOVWF v4
+	;change name
+	MOVF printer ,W
+	MOVWF name4
+    INCF name4,F
+
+    RETURN
+
+
+
+; Convert binary to BCD ...................................
+
+outres2:	;MOVF	Result,W	; load result
+	MOVWF	Lsd2		; into low digit store
+	CLRF	Msd2		; high digit = 0
+	BSF	STATUS,C	; set C flag
+	MOVLW	D'10'		; load 10
+
+again2	SUBWF	Lsd2		; sub 10 from result
+	INCF	Msd2		; inc high digit
+	BTFSC	STATUS,C	; check if negative
+	GOTO	again2		; no, keep going
+	ADDWF	Lsd2		; yes, add 10 back 
+	DECF	Msd2		; inc high digit
+
+
+; display 2 digit BCD result ..............................
+
+	MOVF	Msd2,W		; load high digit result
+	;BTFSC	STATUS,Z	; check if Z
+	;GOTO	lowd2		; yes, dont display Msd
+
+	ADDLW	030		; convert to ASCII
+	BSF	Select,RS	; Select data mode
+	CALL	send		; and send Msd
+
+lowd2	MOVF	Lsd2,W		; load low digit result
+	ADDLW	030		; convert to ASCII
+	BSF	Select,RS	; Select data mode
+	CALL	send		; and send Msd
+	
+	return
+;	GOTO	scan		; scan for clear key
+
+
+display_text2:
+    MOVLW 0x80 
+    MOVWF Char
+    BCF Select, RS
+    CALL send
+    ; Write "Welcome to"
+    MOVLW 'C'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW 'a'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW 'l'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW 'c'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW 'u'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW 'l'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW 'a'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW 't'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW 'i'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW 'n'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+ 
+    MOVLW 'g'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW '.'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW '.'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW '.'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+
+    RETURN	
 
 end
