@@ -45,6 +45,7 @@ printer equ 0x47
 ; Main program
 ORG 0x00
     
+
 GOTO init   ; Jump to main program
 
 
@@ -104,7 +105,7 @@ main:
     CLRF v4
 	CLRF printer
     call inid
-	CALL blink
+	;CALL blink
 
    
    
@@ -218,7 +219,7 @@ loop:
     bsf PORTC, 0
     bsf PORTC, 1
     bsf PORTC, 2
-   
+
     call delay_us_10         ; Wait for 10 �s
     bcf PORTB, TRIGGER_PIN   ; Clear RB0 (end trigger pulse)
     bsf PORTC, 0
@@ -346,28 +347,52 @@ wait_echo_high:
    terminate:
    MOVF  Count, W 
    call  AddValue
-   ;MOVF  v1, W
-   ;call outres
-   ;call delay_0_5s
-   ;call delay_0_5s
-   ; MOVF  v2, W
-   ;call outres
-   ;call delay_0_5s
-   ;call delay_0_5s
-    ;MOVF  v3, W
-   ;call outres
-   ;call delay_0_5s
-   ;call delay_0_5s
-    ;MOVF  v4, W
-   ;call outres
-   ;call delay_0_5s
-   ;call delay_0_5s
-   ;call nextTurn
+   INCF printer, F  ; Increment the counter
+   MOVF printer, W
+   SUBLW D'24'      ; Compare counter with 24
+   BTFSC STATUS, Z  ; Skip next instruction if counter is  24
+   call clear
+
    
-   
+ 
+ 
+    ; If counter is 24, print the value of v1
+    ;CALL clear       ; Call clear subroutine to reset the counter
+ GOTO nextTurn   ; If counter is not 24, go to NEXT_TURN
+
+clear:
+   MOVF  v1, W 
+   call outres
+   MOVF  v2, W 
+   call outres
+   call next_line
+   MOVF  v3, W 
+   call outres
+   MOVF  v4, W 
+   call outres
+   call first_line
+  
+
+	CLRF v1
+    CLRF v2
+    CLRF v3
+    CLRF v4
+    CLRF printer
+return   
+ next_line:
+    MOVLW 0xC0 ; LCD command to move to the second line (address 0xC0)
+    BCF Select, RS ; select instruction mode
+    CALL send
+    RETURN 
+
+first_line
+   movlw 0x80
+   BCF Select, RS ; select instruction mode
+   CALL send
+   RETURN 
 
 ; Convert binary to BCD ...................................
-outres  MOVF  v1, W    ; load Count into W
+outres:  ;MOVF  v1, W    ; load Count into W
         MOVWF Lsd         ; initially store Count in Lsd
         CLRF  Msd         ; clear tens place
         CLRF  Hsd         ; clear hundreds place
@@ -390,6 +415,33 @@ loop10  SUBWF Lsd, F      ; subtract 10 from Lsd
         GOTO loop10       ; repeat for more tens
 done10  ADDWF Lsd, F      ; add 10 back to Lsd if last subtraction was negative
 
+    MOVLW 'S'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW 'R'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW '0'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW '5'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+
+    MOVLW ':'
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+     
+ 
+
 ; Display hundreds place
         MOVF  Hsd, W      ; load hundreds digit result
 		BTFSC	STATUS,Z	; check if Z
@@ -411,12 +463,27 @@ mid:
         BSF   Select, RS  ; select data mode
         CALL  send        ; send units digit
 
+    MOVLW ' '
+    MOVWF Char
+    BSF Select, RS
+    CALL send
+ 
+
+return
 
 
 
-;nextTurn:
 
+nextTurn:
+   
+    call delay_0_5s
+    ;call delay_0_5s
     RETURN           ; Repeat loop indefinitely
+
+
+
+
+
 
 ; Delay function for 10 �s delay
 delay_us_10:
