@@ -3,7 +3,7 @@
 
 
 
-[Uploading project - Proteus 8 Professional - Schematic Capture 2024-07-11 20-23-42.gif…]()
+![project - Proteus 8 Professional - Schematic Capture 2024-07-11 20-23-42](https://github.com/amroee2/PIC_Assembly/assets/145708497/f938151f-4a89-4a15-b80d-c3911ab9c50c)
 
 
 
