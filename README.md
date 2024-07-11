@@ -3,7 +3,7 @@
 
 
 
-![Uploading project - Proteus 8 Professional - Schematic Capture 2024-07-11 20-23-42.gif…]()
+[Uploading project - Proteus 8 Professional - Schematic Capture 2024-07-11 20-23-42.gif…]()
 
 
 
