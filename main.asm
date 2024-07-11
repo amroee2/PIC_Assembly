@@ -8,6 +8,7 @@ __CONFIG 0x3731
 #define TRIGGER_PIN  RB0   ; Trigger pin connected to RB0
 #define ECHO_PIN     RB1   ; Echo pin connected to RB1
 
+
 ; RAM variables
 distance        equ 0x20  ; Variable to store distance
 duration_high   equ 0x21  ; Variable to store high byte of duration
@@ -23,49 +24,62 @@ quotient         equ 0x30
 remainder         equ 0x30
 Msd               equ 0x31
 Lsd               equ 0x32 
-L EQU  0x33
-H EQU 0x34
-divl EQU 0x35
-divh EQU 0x36
-Count EQU 0x37 
-Blinker EQU 0x38
-
-prevCarry equ 0x39
-res1 equ 0x40
-res2 equ 0x41
-v1   equ 0x42
-v2	 equ 0x43		
-v3   equ 0x44
-v4   equ 0x45
-Hsd   EQU 0x46
-printer equ 0x47
-; max 4 names variables
-name1    equ 0x48
-name2    equ 0x49
-name3    equ 0x50
-name4    equ 0x51
-	; digits of the ultrasonic id
-Msd2               equ 0x52
+L                 EQU  0x33
+H                  EQU 0x34
+divl               EQU 0x35
+divh               EQU 0x36
+Count              EQU 0x37 
+Blinker            EQU 0x38
+prevCarry          equ 0x39
+res1               equ 0x40
+res2               equ 0x41
+v1                 equ 0x42
+v2	               equ 0x43		
+v3                 equ 0x44
+v4                 equ 0x45
+Hsd                EQU 0x46
+printer            equ 0x47
+name1              equ 0x48
+name2              equ 0x49
+name3              equ 0x50
+name4              equ 0x51	                    
+Msd2               equ 0x52 ; digits of the ultrasonic id
 Lsd2               equ 0x53 
+tempName           equ 0x54
+calculate          equ 0x55
 
-tempName  equ 0x54
-calculate equ 0x55
+
+
+
+
+
+
+
 
 ; Main program
 ORG 0x00
-    
-
 GOTO init   ; Jump to main program
+
+
+
+
 
 
 ORG 0x04
 GOTO ISR
 
+
+
+
+
+
+
 ; Initialization routine
 init:
     CLRF calculate
-   
     bsf STATUS, RP0   ; Select Bank 1
+
+
     movlw b'00000000' ; Set all PORTC pins as output
     movwf TRISC
     bcf STATUS, RP0   ; Select Bank 0
@@ -101,13 +115,19 @@ init:
     BANKSEL PORTD
 	;CALL blink
     GOTO main
+
+
+
+
+
+
     
 ISR:
-
     retfie
 
-; Main program routine
 
+
+; Main program routine
 INCLUDE "LCDIS_PORTD.INC"
 main:
     CLRF v1
@@ -279,10 +299,9 @@ loop:
     BTFSS PORTC, 3 ; Test bit PORTC,3, skip if set
     GOTO CHECK_C4
     GOTO NEXT_STATE
-
-
-
 	goto loop
+
+
 
     ; Wait for echo pulse to start
 CHECK_C4:
@@ -344,43 +363,40 @@ wait_echo_high:
     btfsc PORTB, ECHO_PIN    ; Wait for RB1 to go low
     goto wait_echo_high
     
+
+;Timer1 add
     bcf T1CON, TMR1ON    ; Turn off Timer1
     movf TMR1H, W        ; Read Timer1 high byte
     movwf duration_high  ; Store high byte of duration
     movf TMR1L, W        ; Read Timer1 low byte
     movwf duration_low   ; Store low byte of duration
-
-   movf  TMR1L,W
-   movwf  L
-   movf TMR1H, W  
-   movwf  H
-   goto divide58
-   terminate:
-   MOVF  Count, W 
-   call  AddValue
-   INCF printer, F  ; Increment the counter
-   MOVF printer, W
-   SUBLW D'24'      ; Compare counter with 24
-   BTFSC STATUS, Z  ; Skip next instruction if counter is  24
-   goto clear
-
+    movf  TMR1L,W
+    movwf  L
+    movf TMR1H, W  
+    movwf  H
+    goto divide58
+    terminate:
+    MOVF  Count, W 
+    call  AddValue
+    INCF printer, F  ; Increment the counter
+    MOVF printer, W
+    SUBLW D'24'      ; Compare counter with 24
+    BTFSC STATUS, Z  ; Skip next instruction if counter is  24
+    goto clear
 
 
-   MOVF calculate, W
-   SUBLW 0x00
-   BTFSC STATUS, Z
-   call display_text2
-   decf calculate, F
-   
-   
- 
- 
-    ; If counter is 24, print the value of v1
-    ;CALL clear       ; Call clear subroutine to reset the counter
+
+     MOVF calculate, W
+     SUBLW 0x00
+     BTFSC STATUS, Z
+     call display_text2
+     decf calculate, F
  GOTO nextTurn   ; If counter is not 24, go to NEXT_TURN
 
-clear:
 
+
+
+clear:
 call clear_lcd
 MOVF name1,W
    MOVWF tempName 
@@ -400,16 +416,17 @@ MOVF name1,W
    MOVF  v4, W 
    call outres
    call first_line
-
-   
-  
-
 	CLRF v1
     CLRF v2
     CLRF v3
     CLRF v4
     CLRF printer
 GOTO nextTurn   
+
+
+
+
+
  next_line:
     MOVLW 0xC0 ; LCD command to move to the second line (address 0xC0)
     BCF Select, RS ; select instruction mode
@@ -421,6 +438,8 @@ first_line
    BCF Select, RS ; select instruction mode
    CALL send
    RETURN 
+
+
 
 ; Convert binary to BCD ...................................
 outres:  ;MOVF  v1, W    ; load Count into W
@@ -460,16 +479,6 @@ done10  ADDWF Lsd, F      ; add 10 back to Lsd if last subtraction was negative
 	call outres2
 	
 
-  ;  MOVLW '0'
-   ; MOVWF Char
-    ;BSF Select, RS
-    ;CALL send
-
-    ;MOVLW '5'
-    ;MOVWF Char
-    ;BSF Select, RS
-    ;CALL send
-
     MOVLW ':'
     MOVWF Char
     BSF Select, RS
@@ -497,24 +506,15 @@ mid:
         ADDLW D'48'       ; convert to ASCII
         BSF   Select, RS  ; select data mode
         CALL  send        ; send units digit
-
-  
- 
-
 return
 
 
 
 
 nextTurn:
-   
     call delay_0_5s
-    ;call delay_0_5s
+    call delay_0_5s
     RETURN           ; Repeat loop indefinitely
-
-
-
-
 
 
 ; Delay function for 10 �s delay
@@ -530,9 +530,9 @@ delay_us_10:
 	nop
 	nop
 return
+
+
 divide58:
-;    CALL xms
- ;   CALL xms
  	movlw 0xFF       ; Load high byte (sign-extended part for negative number)
     movwf divh   ; Move to high byte register
 
@@ -540,21 +540,16 @@ divide58:
     movwf divl    ; Move to low byte register
     ; write the parameters
 
-	;movlw 0xAE
-	;sublw 
-	;movwf L
-	;movlw 0x00
-	;movwf H
-
 	movlw 00
 	movwf Count
 	
 
+
 divide:
 
-	movf L, W           ; Load low byte of current value into W
-    addwf divl, W         ; Subtract the constant value (58)
-    movwf L             ; Store the result back into LOW_REG
+     	movf L, W           ; Load low byte of current value into W
+        addwf divl, W         ; Subtract the constant value (58)
+        movwf L             ; Store the result back into LOW_REG
 		movlw 0
 		btfsc STATUS, C           ; Check Carry flag, skip if set
 		movlw 1
@@ -572,20 +567,17 @@ back:
 		btfss STATUS, Z   ; Check if the Carry bit is clear
     	bcf prevCarry, 1  ; If Carry is clear, clear bit 0 of CARRY_VAR
 
-	addwf H ,W          ; Load high byte of current value into W
-	movwf res1
-    addwf divh, W         ; Subtract the constant value (58)
-	movwf res2
-    movwf H            ; Store the result back into HIGH_REG
+      	addwf H ,W          ; Load high byte of current value into W
+	    movwf res1
+        addwf divh, W         ; Subtract the constant value (58)
+	    movwf res2
+        movwf H            ; Store the result back into HIGH_REG
 
-			incf Count ,F
-			btfss STATUS, Z   ; if zero chzero else divide 
-    		goto divide 
-			goto chzero
-			;goto chneg
-			
-			
-
+		incf Count ,F
+		btfss STATUS, Z   ; if zero chzero else divide 
+    	goto divide 
+		goto chzero
+	
 chzero:
 	btfsc prevCarry, 1 ; if zero terminate else skip
 	goto zero
@@ -595,7 +587,6 @@ chneg:	;if no carry terminate else skip
 	movf H, W
 	btfsc STATUS , Z
 	goto aboveHalf
-;	goto terminate
 	movlw 0
 	goto back
 	
@@ -610,12 +601,9 @@ aboveHalf:
 	goto terminate
 
 goto terminate
-
-
 zero:
 	incf Count, F
 	goto terminate
-;	goto negative
 
 
 
@@ -637,8 +625,6 @@ display_text:
     MOVWF Char
     BCF Select, RS
     CALL send
-
-
 
     ; Write "Welcome to"
     MOVLW 'W'
@@ -807,14 +793,12 @@ d2:
 
 AddValue:
     MOVWF temp
-
     ; Compare with v1
     MOVF v1, W
     SUBWF temp, W
     BTFSS STATUS, C
     GOTO CheckV2
     ; Shift values down
-
     MOVF v3, W
     MOVWF v4
     MOVF v2, W
@@ -822,10 +806,8 @@ AddValue:
     MOVF v1, W
     MOVWF v2
     MOVF temp, W
-    MOVWF v1
-	
+    MOVWF v1	
 ;shift names
-
  	MOVF name3, W
     MOVWF name4
     MOVF name2, W
@@ -844,14 +826,12 @@ CheckV2:
     BTFSS STATUS, C
     GOTO CheckV3
     ; Shift values down
-
     MOVF v3, W
     MOVWF v4
     MOVF v2, W
     MOVWF v3
     MOVF temp, W
     MOVWF v2
-
 ;shift names
 	MOVF name3, W
     MOVWF name4
@@ -860,8 +840,6 @@ CheckV2:
    	MOVF printer ,W	; store the number of ultrasonic
 	MOVWF name2
     INCF name2,F
-
-
     RETURN
 
 CheckV3:
@@ -870,7 +848,6 @@ CheckV3:
     BTFSS STATUS, C
     GOTO CheckV4
     ; Shift value down
-
     MOVF v3, W
     MOVWF v4
     MOVF temp, W
@@ -881,7 +858,6 @@ CheckV3:
 	MOVF printer ,W  ; store the number of ultrasonic
 	MOVWF name3
     INCF name3,F
-
     RETURN
 
 CheckV4:
@@ -890,14 +866,12 @@ CheckV4:
     BTFSS STATUS, C
     RETURN
     ; Store in v4 if larger than current v4
-
     MOVF temp, W ; store the number of ultrasonic
     MOVWF v4
 	;change name
 	MOVF printer ,W
 	MOVWF name4
     INCF name4,F
-
     RETURN
 
 
@@ -921,9 +895,6 @@ again2	SUBWF	Lsd2		; sub 10 from result
 ; display 2 digit BCD result ..............................
 
 	MOVF	Msd2,W		; load high digit result
-	;BTFSC	STATUS,Z	; check if Z
-	;GOTO	lowd2		; yes, dont display Msd
-
 	ADDLW	030		; convert to ASCII
 	BSF	Select,RS	; Select data mode
 	CALL	send		; and send Msd
@@ -934,8 +905,6 @@ lowd2	MOVF	Lsd2,W		; load low digit result
 	CALL	send		; and send Msd
 	
 	return
-;	GOTO	scan		; scan for clear key
-
 
 display_text2:
     MOVLW 0x80 
