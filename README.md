@@ -2,8 +2,7 @@
 
 
 
-
-https://github.com/amroee2/PIC_Assembly/assets/145708497/dd9bd678-57ec-4e0a-aed9-dfe0a14f4548
+![project - Proteus 8 Professional - Schematic Capture 2024-07-11 20-23-42]
 
 
 
